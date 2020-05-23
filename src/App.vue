@@ -1,11 +1,11 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <router-view/>
+    <router-view />
   </div>
 </template>
 
 <script>
+// import '//api.map.baidu.com/api?v=2.0&ak=AYn9SKWfe4VkrFxywtADGVteISl6OULF'
 export default {
   name: 'App'
 }
