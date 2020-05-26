@@ -11,10 +11,17 @@ export default {
   },
   data () {
     return {
-      ak: 'AYn9SKWfe4VkrFxywtADGVteISl6OULF'
+      ak: 'HD5qKGOAdqzf7MmNCm4ZRNHPaKwGA2mQ',
+      startPoint: '',
+      endPoint: '',
+      pointsArrGet: ''
     }
   },
+  created () {
+    this.getTrackInfo()
+  },
   mounted () {
+    // this.getTrackInfo()
     this.$nextTick(() => {
       var _this = this
       MP(_this.ak).then(BMap => {
@@ -23,11 +30,38 @@ export default {
     })
   },
   methods: {
+    // 获取轨迹信息
+    getTrackInfo () {
+      var params = {
+        ak: 'HD5qKGOAdqzf7MmNCm4ZRNHPaKwGA2mQ',
+        service_id: '221094',
+        entity_name: '爱上你是我的错',
+        // mcode: 'F7:E2:AD:B2:D7:04:94:F5:E9:55:B4:60:4E:50:CB:95:D9:EB:CF:A0;com.example.lieying',
+        start_time: 1589904000,
+        end_time: 1589990400,
+        dataType: 'jsonp',
+        page_size: 5000
+      }
+      console.log(params)
+      this.$jsonp('http://yingyan.baidu.com/api/v3/track/gettrack?mcode=F7:E2:AD:B2:D7:04:94:F5:E9:55:B4:60:4E:50:CB:95:D9:EB:CF:A0;com.example.lieying', params).then(res => {
+        console.log('res', res)
+        this.startPoint = res.start_point
+        this.endPoint = res.end_point
+
+        // 获取历史轨迹
+        this.pointsArrGet = res.points
+      }).catch(err => {
+        console.log('err', err)
+      })
+    },
+    /** 生成 baidu 地图 */
     baiduMap (BMap) {
       var map = new BMap.Map('allmap')
 
-      var point = new BMap.Point(115.043096, 38.592132) // 创建点坐标
-      map.centerAndZoom(point, 12) // 初始化地图，设置中心点坐标和地图级别
+      var startPoint = new BMap.Point(this.startPoint.longitude, this.startPoint.latitude) // 创建点坐标
+      var endPoint = new BMap.Point(this.endPoint.longitude, this.endPoint.latitude) // 创建点坐标
+
+      map.centerAndZoom(startPoint, 16) // 初始化地图，设置中心点坐标和地图级别
       map.enableScrollWheelZoom(true) // 开启鼠标滚轮缩放
 
       map.addControl(new BMap.NavigationControl())
@@ -36,20 +70,54 @@ export default {
       map.addControl(new BMap.MapTypeControl())
       // map.setMapStyle({ style: 'midnight' }) // 地图风格
 
-      var marker = new window.BMap.Marker(point) // 创建标注
-      map.addOverlay(marker) // 将标注添加到地图中
+      var startMarker = new window.BMap.Marker(startPoint) // 创建起点标注
+      var endMarker = new window.BMap.Marker(endPoint) // 创建终点标注
 
-      // 提示信息
-      var infoWindow = new BMap.InfoWindow('这是提示信息')
-      // 鼠标移上标注点要发生的事
-      marker.addEventListener('mouseover', function () {
-        this.openInfoWindow(infoWindow)
+      map.addOverlay(startMarker) // 将起始标注添加到地图中
+      map.addOverlay(endMarker) // 将结束标注添加到地图中
+
+      /** ***************** 点击 => 弹出提示信息窗口 *******************/
+
+      // 鼠标单击事件
+      map.addEventListener('click', function (e) {
+        // alert('纬度:' + e.Ag.lat + ';经度:' + e.Ag.lng)
+        var opts = {
+          // 信息窗口宽度
+          width: 250,
+          // 信息窗口高度
+          height: 100,
+          // 信息窗口标题
+          title: '车辆信息'
+        }
+        var infoWindow = new BMap.InfoWindow('经度:' + e.Ag.lng + '\n纬度:' + e.Ag.lat, opts)
+        // 创建点击位置的坐标 => 在哪里点击就在哪里打开
+        var clickPoint = new BMap.Point(e.Ag.lng, e.Ag.lat)
+        // map.openInfoWindow(infoWindow, map.getCenter()) => 信息框永远在界面的中间打开
+        map.openInfoWindow(infoWindow, clickPoint)
       })
+
+      // 鼠标移上标注点要发生的事
+      // marker.addEventListener('mouseover', function () {
+      //   this.openInfoWindow(infoWindow)
+      // })
 
       // 鼠标移开标注点要发生的事
-      marker.addEventListener('mouseout', function () {
-        // this.closeInfoWindow(infoWindow)
-      })
+      // marker.addEventListener('mouseout', function () {
+      //   this.closeInfoWindow(infoWindow)
+      // })
+
+      /** ******** 创建轨迹 *********/
+      // 声明：轨迹经纬度数组
+      let pointArr = []
+      for (let i = 1; i < this.pointsArrGet.length - 1; i++) {
+        let point = new BMap.Point(this.pointsArrGet[i].longitude, this.pointsArrGet[i].latitude)
+        pointArr.push(point)
+      }
+      // 声明折线所经过的经纬度
+      let polyline = new BMap.Polyline(pointArr, { strokeColor: 'blue', strokeWeight: 6, strokeOpacity: 0.5 })
+
+      // 增加折线
+      map.addOverlay(polyline)
     }
   }
 }
@@ -57,6 +125,14 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+html {
+  height: 100%;
+}
+body {
+  height: 100%;
+  margin: 0px;
+  padding: 0px;
+}
 .baidumap {
   width: 100%;
   height: 100%;
