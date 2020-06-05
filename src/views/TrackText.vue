@@ -15,7 +15,7 @@ export default {
   data () {
     return {
       doId: '',
-      pointAllArr: [],//坐标数组, 用于划线
+      pointAllArr: [], // 坐标数组, 用于划线
     };
   },
   methods: {

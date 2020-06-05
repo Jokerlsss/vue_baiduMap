@@ -1,30 +1,49 @@
 <template>
-  <div class="baidumap" id="allmap"></div>
+  <div class="baidumap" :style="{height:mapHeight}" id="allmap"></div>
 </template>
 
 <script>
 import { MP } from '@/common/map.js'
+// import globalStore from '../stores/global-stores'
 export default {
+  computed: {
+    // mapHeight () {
+    //   console.log('globalStore.state.clientHeight', globalStore.state.clientHeight)
+    //   const height = globalStore.state.clientHeight - 60 + 'px'
+    //   return height
+    // }
+  },
   name: 'Bmap',
   components: {
 
   },
   data () {
     return {
-      ak: 'HD5qKGOAdqzf7MmNCm4ZRNHPaKwGA2mQ',
+      ak: 'AYn9SKWfe4VkrFxywtADGVteISl6OULF',
       startPoint: '',
       endPoint: '',
       pointsArrGet: ''
+      // mapHeight: '500px'
     }
   },
   created () {
     this.getTrackInfo()
+    // this.$nextTick(() => {
+    //   var _this = this
+    //   MP(_this.ak).then(BMap => {
+    //     this.baiduMap(BMap)
+    //   })
+    // })
+    console.log('created')
   },
   mounted () {
     // this.getTrackInfo()
+    console.log('mounted')
     this.$nextTick(() => {
       var _this = this
+      console.log('mounted.nextTick')
       MP(_this.ak).then(BMap => {
+        console.log('mounted.MP')
         this.baiduMap(BMap)
       })
     })
@@ -96,6 +115,11 @@ export default {
         map.openInfoWindow(infoWindow, clickPoint)
       })
 
+      // 创建轨迹
+      let polyline = this.polylineDraw(this.pointsArrGet, BMap)
+      // 增加折线
+      map.addOverlay(polyline)
+
       // 鼠标移上标注点要发生的事
       // marker.addEventListener('mouseover', function () {
       //   this.openInfoWindow(infoWindow)
@@ -105,19 +129,18 @@ export default {
       // marker.addEventListener('mouseout', function () {
       //   this.closeInfoWindow(infoWindow)
       // })
-
-      /** ******** 创建轨迹 *********/
+    },
+    /** ******** 创建轨迹 *********/
+    polylineDraw (pointsArr, BMap) {
       // 声明：轨迹经纬度数组
-      let pointArr = []
-      for (let i = 1; i < this.pointsArrGet.length - 1; i++) {
-        let point = new BMap.Point(this.pointsArrGet[i].longitude, this.pointsArrGet[i].latitude)
-        pointArr.push(point)
+      let temp = []
+      for (let i = 1; i < pointsArr.length - 1; i++) {
+        let point = new BMap.Point(pointsArr[i].longitude, pointsArr[i].latitude)
+        temp.push(point)
       }
       // 声明折线所经过的经纬度
-      let polyline = new BMap.Polyline(pointArr, { strokeColor: 'blue', strokeWeight: 6, strokeOpacity: 0.5 })
-
-      // 增加折线
-      map.addOverlay(polyline)
+      let polyline = new BMap.Polyline(temp, { strokeColor: 'blue', strokeWeight: 6, strokeOpacity: 0.5 })
+      return polyline
     }
   }
 }
@@ -126,18 +149,18 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 html {
-  height: 100%;
+  /* height: 100%; */
 }
 body {
-  height: 100%;
+  /* height: 100%; */
   margin: 0px;
   padding: 0px;
 }
 .baidumap {
   width: 100%;
+  padding: 0;
   height: 100%;
-  border: 1px solid red;
-  position: absolute;
+  position: relative;
   left: 0;
   top: 0;
   right: 0;
